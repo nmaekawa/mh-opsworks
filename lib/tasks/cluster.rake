@@ -87,6 +87,7 @@ namespace :cluster do
     recipes = %W|mh-opsworks-recipes::stop-matterhorn
     mh-opsworks-recipes::reset-database
     mh-opsworks-recipes::remove-all-matterhorn-files
+    mh-opsworks-recipes::create-matterhorn-directories
     mh-opsworks-recipes::remove-admin-indexes
     mh-opsworks-recipes::remove-engage-indexes|
     layers = ['MySQL db','Admin','Engage','Workers']
