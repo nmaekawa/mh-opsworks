@@ -102,6 +102,27 @@ namespace :cluster do
     Rake::Task['matterhorn:start'].execute
   end
 
+  desc 'Remove and reset cluster database, files, and solr indexes and apply seed data'
+  task apply_seed_data: [:configtest, :config_sync_check, :production_failsafe] do
+    recipes = %W|mh-opsworks-recipes::stop-matterhorn
+    mh-opsworks-recipes::reset-database
+    mh-opsworks-recipes::remove-all-matterhorn-files
+    mh-opsworks-recipes::load-seed-data
+    mh-opsworks-recipes::create-matterhorn-directories
+    mh-opsworks-recipes::remove-admin-indexes
+    mh-opsworks-recipes::remove-engage-indexes|
+    layers = ['MySQL db','Admin','Engage','Workers']
+    custom_json='{"do_it":true}'
+
+    Cluster::Deployment.execute_chef_recipes_on_layers(
+      recipes: recipes,
+      layers: layers,
+      custom_json: custom_json
+    )
+
+    Rake::Task['matterhorn:start'].execute
+  end
+
   desc Cluster::RakeDocs.new('cluster:new').desc
   task :new do
     session = Cluster::ConfigCreationSession.new
