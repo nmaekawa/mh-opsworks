@@ -92,8 +92,6 @@ namespace :admin do
       Cluster::Base.stack_custom_json[:storage][:shared_storage_root] ||
       Cluster::Base.stack_custom_json[:storage][:export_root]
 
-    puts shared_storage_root_path
-
     system %Q|scp -C #{a_public_host.public_dns}:#{shared_storage_root_path}/cluster_seed/cluster_seed.tgz .|
 
     puts %Q|Uploading cluster_seed.tgz to #{asset_bucket_name}|
