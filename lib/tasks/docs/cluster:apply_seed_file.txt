@@ -1,0 +1,16 @@
+Remove and reset cluster database, files, and solr indexes and apply seed data
+
+THIS IS DESTRUCTIVE. USE ONLY WHEN CERTAIN.
+
+This:
+
+* Zeros out the files, database tables, and solr indexes on a cluster,
+* Loads seed data from the cluster seed, and
+* Ensures matterhorn is running.
+
+This is most useful to allow you to restore a matterhorn cluster to a
+consistent state based on the seed file you're applying.
+
+SEE ALSO:
+
+cluster:reset, cluster:create_and_publish_seed_file

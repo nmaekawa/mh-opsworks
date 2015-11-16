@@ -1,0 +1,11 @@
+Create and publish a new cluster seed file to s3
+
+THIS IS DESTRUCTIVE. USE ONLY WHEN CERTAIN.
+
+This wraps up `cluster:create_seed_file` and `cluster:publish_seed_file` in a
+lovely little bow and runs them in the correct order.
+
+SEE ALSO:
+
+cluster:create_seed_file, cluster:reset, cluster:publish_seed_file,
+cluster:apply_seed_file

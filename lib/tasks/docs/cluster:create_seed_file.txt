@@ -1,0 +1,30 @@
+Create a cluster seed file
+
+THIS IS DESTRUCTIVE. USE ONLY WHEN CERTAIN.
+
+This creates a cluster seed file, which is a tarball that lets you
+reproduce the state of a cluster in combination with other rake tasks. A
+cluster seed file's purpose is primarily to let you create a consistent
+testing environment.
+
+A cluster seed contains:
+
+* A database dump,
+* A manifest of hostnames to allow the database to be modified correctly after
+  loading, and
+* The video and image files.
+
+The process of creating a cluster seed involves downtime. It's not meant as a
+backup process.
+
+The cluster seed is stored in `$SHARED_STORAGE_ROOT/cluster_seed`.  After
+creating the seed, you can use `cluster:publish_seed_file` to upload it
+to shared s3 storage space.
+
+`cluster:create_and_publish_seed_file` does both steps for you
+automatically.
+
+SEE ALSO:
+
+cluster:publish_seed_file, cluster:create_and_publish_seed_file,
+cluster:apply_seed_file

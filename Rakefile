@@ -65,52 +65,6 @@ namespace :admin do
     end
   end
 
-  desc 'create a cluster seed file'
-  task create_cluster_seed_file: ['cluster:configtest', 'cluster:config_sync_check', 'cluster:production_failsafe'] do
-    recipes = ['mh-opsworks-recipes::stop-matterhorn', 'mh-opsworks-recipes::create-cluster-seed-file']
-    layers = ['MySQL db','Admin','Engage','Workers']
-    custom_json='{"do_it":true}'
-
-    Cluster::Deployment.execute_chef_recipes_on_layers(
-      recipes: recipes,
-      layers: layers,
-      custom_json: custom_json
-    )
-
-    Rake::Task['matterhorn:start'].execute
-  end
-
-  desc 'publish a cluster seed file to s3'
-  task publish_cluster_seed_file: ['cluster:configtest', 'cluster:config_sync_check', 'cluster:production_failsafe'] do
-    asset_bucket_name = Cluster::Base.shared_asset_bucket_name
-
-    a_public_host = Cluster::Instances.online.find do |instance|
-      instance.public_dns != nil
-    end
-
-    shared_storage_root_path =
-      Cluster::Base.stack_custom_json[:storage][:shared_storage_root] ||
-      Cluster::Base.stack_custom_json[:storage][:export_root]
-
-    system %Q|scp -C #{a_public_host.public_dns}:#{shared_storage_root_path}/cluster_seed/cluster_seed.tgz .|
-
-    puts %Q|Uploading cluster_seed.tgz to #{asset_bucket_name}|
-    Cluster::Assets.publish_support_asset_to(
-      bucket: asset_bucket_name,
-      file_name: 'cluster_seed.tgz',
-      permissions: 'public'
-    )
-    puts 'done.'
-
-    File.unlink('cluster_seed.tgz')
-  end
-
-  desc 'create and publish a new cluster seed file to s3'
-  task create_and_publish_cluster_seed_file: ['cluster:configtest', 'cluster:config_sync_check', 'cluster:production_failsafe'] do
-    Rake::Task['admin:create_cluster_seed_file'].execute
-    Rake::Task['admin:publish_cluster_seed_file'].execute
-  end
-
   desc Cluster::RakeDocs.new('admin:republish_maven_cache').desc
   task republish_maven_cache: ['cluster:configtest', 'cluster:config_sync_check'] do
     asset_bucket_name = Cluster::Base.shared_asset_bucket_name

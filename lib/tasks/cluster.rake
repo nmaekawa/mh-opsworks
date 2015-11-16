@@ -82,7 +82,7 @@ namespace :cluster do
     Cluster::Console.run
   end
 
-  desc 'Remove and reset cluster database, files, and solr indexes'
+  desc Cluster::RakeDocs.new('cluster:reset').desc
   task reset: [:configtest, :config_sync_check, :production_failsafe] do
     recipes = %W|mh-opsworks-recipes::stop-matterhorn
     mh-opsworks-recipes::reset-database
@@ -102,8 +102,54 @@ namespace :cluster do
     Rake::Task['matterhorn:start'].execute
   end
 
-  desc 'Remove and reset cluster database, files, and solr indexes and apply seed data'
-  task apply_seed_data: [:configtest, :config_sync_check, :production_failsafe] do
+  desc Cluster::RakeDocs.new('cluster:create_seed_file').desc
+  task create_seed_file: [:configtest, :config_sync_check, :production_failsafe] do
+    recipes = ['mh-opsworks-recipes::stop-matterhorn', 'mh-opsworks-recipes::create-cluster-seed-file']
+    layers = ['MySQL db','Admin','Engage','Workers']
+    custom_json='{"do_it":true}'
+
+    Cluster::Deployment.execute_chef_recipes_on_layers(
+      recipes: recipes,
+      layers: layers,
+      custom_json: custom_json
+    )
+
+    Rake::Task['matterhorn:start'].execute
+  end
+
+  desc Cluster::RakeDocs.new('cluster:publish_seed_file').desc
+  task publish_seed_file: [:configtest, :config_sync_check, :production_failsafe] do
+    asset_bucket_name = Cluster::Base.shared_asset_bucket_name
+
+    a_public_host = Cluster::Instances.online.find do |instance|
+      instance.public_dns != nil
+    end
+
+    shared_storage_root_path =
+      Cluster::Base.stack_custom_json[:storage][:shared_storage_root] ||
+      Cluster::Base.stack_custom_json[:storage][:export_root]
+
+    system %Q|scp -C #{a_public_host.public_dns}:#{shared_storage_root_path}/cluster_seed/cluster_seed.tgz .|
+
+    puts %Q|Uploading cluster_seed.tgz to #{asset_bucket_name}|
+    Cluster::Assets.publish_support_asset_to(
+      bucket: asset_bucket_name,
+      file_name: 'cluster_seed.tgz',
+      permissions: 'public'
+    )
+    puts 'done.'
+
+    File.unlink('cluster_seed.tgz')
+  end
+
+  desc Cluster::RakeDocs.new('cluster:create_and_publish_seed_file').desc
+  task create_and_publish_seed_file: [:configtest, :config_sync_check, :production_failsafe] do
+    Rake::Task[:create_seed_file].execute
+    Rake::Task[:publish_seed_file].execute
+  end
+
+  desc Cluster::RakeDocs.new('cluster:apply_seed_file').desc
+  task apply_seed_file: [:configtest, :config_sync_check, :production_failsafe] do
     recipes = %W|mh-opsworks-recipes::stop-matterhorn
     mh-opsworks-recipes::reset-database
     mh-opsworks-recipes::remove-all-matterhorn-files
