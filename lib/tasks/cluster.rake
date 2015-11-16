@@ -144,8 +144,8 @@ namespace :cluster do
 
   desc Cluster::RakeDocs.new('cluster:create_and_publish_seed_file').desc
   task create_and_publish_seed_file: [:configtest, :config_sync_check, :production_failsafe] do
-    Rake::Task[:create_seed_file].execute
-    Rake::Task[:publish_seed_file].execute
+    Rake::Task['cluster:create_seed_file'].execute
+    Rake::Task['cluster:publish_seed_file'].execute
   end
 
   desc Cluster::RakeDocs.new('cluster:apply_seed_file').desc
