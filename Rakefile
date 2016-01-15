@@ -80,17 +80,21 @@ namespace :admin do
       (instance.public_dns != nil) && instance.hostname.match(/admin/)
     end
 
-    system %Q|ssh -C #{a_public_host.public_dns} 'sudo bash -c "cd /root && tar cvfz - .m2/"' > maven_cache.tgz|
+    a_private_worker = Cluster::Instances.online.find do |instance|
+      instance.hostname.match(/^worker/)
+    end
 
-    puts %Q|Uploading maven_cache.tgz to #{asset_bucket_name}|
-    Cluster::Assets.publish_support_asset_to(
-      bucket: asset_bucket_name,
-      file_name: 'maven_cache.tgz',
-      permissions: 'public'
-    )
-    puts 'done.'
+    puts %Q|ssh -A -t -C #{a_public_host.public_dns} ssh -A -t #{a_private_worker.private_dns} 'sudo bash -c "cd /root && tar cvfz - .m2/"' > maven_cache.tgz|
 
-    File.unlink('maven_cache.tgz')
+    # puts %Q|Uploading maven_cache.tgz to #{asset_bucket_name}|
+    # Cluster::Assets.publish_support_asset_to(
+    #   bucket: asset_bucket_name,
+    #   file_name: 'maven_cache.tgz',
+    #   permissions: 'public'
+    # )
+    # puts 'done.'
+    #
+    # File.unlink('maven_cache.tgz')
   end
 end
 
